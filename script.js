@@ -82,7 +82,7 @@ async function runSearch() {
       `).join("");
 
     // Render the data
-    document.getElementById('results').innerHTML = html;
+    document.getElementById('root').innerHTML = html;
 
   } catch (err) {
     console.error(err);
