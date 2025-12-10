@@ -1,4 +1,3 @@
-// Escape HTML helper
 function escapeHtml(str) {
   return str.replace(/[&<>"']/g, m => ({
     '&':'&amp;',
@@ -15,15 +14,15 @@ async function runSearch() {
 
   if (!terms) {
     document.getElementById('results').innerHTML = `
-      <h2>Error</h2>
-      <p>Please provide <code>?terms=</code> in the URL, e.g. <code>?terms=cancer</code></p>`;
+      <h1>Error</h1>
+      <p>Please provide <code>?terms=</code></p>`;
+    // Show the body AFTER JS runs
+    document.body.style.visibility = 'visible';
     return;
   }
 
-  document.getElementById('page-title').textContent = `PubMed Results for: "${terms}"`;
-
   try {
-    // 1️⃣ SEARCH PUBMED
+    // Search PubMed
     const esearchUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&retmode=json&term=${encodeURIComponent(terms)}`;
     const searchResp = await fetch(esearchUrl);
     const searchData = await searchResp.json();
@@ -31,20 +30,19 @@ async function runSearch() {
 
     if (!ids.length) {
       document.getElementById('results').innerHTML = `
-        <h2>No results found</h2>
+        <h1>No results found</h1>
         <p>Search: ${escapeHtml(terms)}</p>`;
+      document.body.style.visibility = 'visible';
       return;
     }
 
-    // 2️⃣ FETCH FULL ARTICLES (XML)
+    // Fetch article details
     const efetchUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=${ids.join(",")}&retmode=xml`;
     const efetchResp = await fetch(efetchUrl);
     const xml = await efetchResp.text();
 
-    // 3️⃣ LIGHT XML PARSING
     const articles = xml
-      .split("<PubmedArticle>")
-      .slice(1)
+      .split("<PubmedArticle>").slice(1)
       .map((block, index) => {
         const getTagText = (tag) => {
           const re = new RegExp(`<${tag}\\b[^>]*>([\\s\\S]*?)<\\/${tag}>`);
@@ -70,26 +68,31 @@ async function runSearch() {
         };
       });
 
-    // 4️⃣ RENDER RESULTS
-    document.getElementById('results').innerHTML = articles.map(a => `
-      <article>
-        <h2>${escapeHtml(a.title)}</h2>
-        <div class="meta">${escapeHtml(a.journal)} • ${escapeHtml(a.year)}</div>
-        <pre>${escapeHtml(a.abstract)}</pre>
-        <p>
-          🔗 <a href="${a.url}" target="_blank" rel="noopener noreferrer">
+    // Build output HTML
+    const html = `<h1>PubMed Results for: "${escapeHtml(terms)}"</h1>` +
+      articles.map(a => `
+        <article>
+          <h2>${escapeHtml(a.title)}</h2>
+          <div class="meta">${escapeHtml(a.journal)} • ${escapeHtml(a.year)}</div>
+          <pre>${escapeHtml(a.abstract)}</pre>
+          <p>🔗 <a href="${a.url}" target="_blank" rel="noopener noreferrer">
             View on PubMed (${a.id})
-          </a>
-        </p>
-      </article>
-    `).join("");
+          </a></p>
+        </article>
+      `).join("");
+
+    // Render the data
+    document.getElementById('results').innerHTML = html;
 
   } catch (err) {
     console.error(err);
     document.getElementById('results').innerHTML = `
-      <h2>Client Error</h2>
+      <h1>Client Error</h1>
       <pre>${escapeHtml(err.message ?? "Unknown error")}</pre>`;
   }
+
+  // Reveal the page only after JS completes
+  document.body.style.visibility = 'visible';
 }
 
 runSearch();
