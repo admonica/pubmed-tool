@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Page with External Script</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 2em;
+            background-color: #f9f9f9;
+        }
+        #myspan {
+            display: inline-block;
+            padding: 10px;
+            border: 1px solid #ccc;
+            cursor: pointer;
+            background-color: #fff;
+        }
+        #myspan:hover {
+            background-color: #eef;
+        }
+    </style>
+</head>
+<body>
+    <h1>My Simple Page</h1>
+    <p>Click the text below to change it:</p>
+
+    <span id="myspan">Click me</span>
+
+    <!-- Import the script file (defer to run after HTML is loaded) -->
+    <script src="script.js" defer></script>
+</body>
+</html
